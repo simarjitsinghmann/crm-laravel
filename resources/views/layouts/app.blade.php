@@ -34,12 +34,30 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto text-center">
+                    @role('super-admin')
                         <li class="nav-item">
                             <a class="nav-link" href="#">Users</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#">Tickets</a>
                         </li>
+                    @endrole
+                    @role('tech')
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Un-Resolved Tickets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Resolved Tickets</a>
+                        </li>
+                    @endrole
+                    @role('sales')
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Tickets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Resolved Tickets</a>
+                        </li>
+                    @endrole
                     </ul>
 
                     <!-- Right Side Of Navbar -->

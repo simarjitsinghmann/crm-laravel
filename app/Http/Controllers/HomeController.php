@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Collection;
+use Auth;
+use App\User;
 class HomeController extends Controller
 {
     /**
@@ -11,6 +14,7 @@ class HomeController extends Controller
      *
      * @return void
      */
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -23,6 +27,16 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        
+        // $roles=Auth::user()->roles()->get();
+        // $firstRole = $this->roles->first();
+        $user = Auth::user();
+       
+        if($user->hasRole('superadmin')){
+            return \Redirect::route('users.index');
+        }
+        else{
+            return view('home');
+        }
     }
 }
