@@ -12,7 +12,7 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Auth::routes(['register' => false]);
@@ -22,5 +22,8 @@ Route::group(['middleware' => ['auth']], function() {
     Route::resource('roles','RoleController');
     Route::resource('users','UserController');
     Route::resource('tickets', 'TicketController');
+    Route::resource('comments', 'CommentController');
 });
+Route::get('/search','SearchController@index')->name('search');
+Route::get('/search/find','SearchController@search');
 

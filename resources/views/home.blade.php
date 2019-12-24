@@ -6,8 +6,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <span>Users</span>
-                    <span> <a href="{{route('users.create')}}">Create New User</a></span>
+                    Dashboard
                 </div>
                 
                 <div class="card-body">
@@ -17,6 +16,7 @@
                         </div>
                     @endif
 
+                    You are Logged in..!
                    
                 </div>
             </div>

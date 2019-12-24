@@ -15,7 +15,9 @@
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <meta name="_token" content="{{ csrf_token() }}">
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -34,28 +36,25 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto text-center">
-                    @role('super-admin')
+                    @role('superadmin')
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Users</a>
+                            <a class="nav-link" href="{{route('users.index')}}">Users</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Tickets</a>
+                            <a class="nav-link" href="{{route('tickets.index')}}">Tickets</a>
                         </li>
                     @endrole
                     @role('tech')
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Un-Resolved Tickets</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Resolved Tickets</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{route('tickets.index')}}">Tickets</a>
+                    </li>
                     @endrole
+                    <li class="nav-item">
+                            <a class="nav-link" href="{{route('search')}}">Search</a>
+                        </li>
                     @role('sales')
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Tickets</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Resolved Tickets</a>
+                            <a class="nav-link" href="{{route('tickets.create')}}">Create New Ticket</a>
                         </li>
                     @endrole
                     </ul>
@@ -64,9 +63,9 @@
                     <ul class="navbar-nav ml-auto">
                         <!-- Authentication Links -->
                         @guest
-                            <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                            </li>
+                            </li> -->
                             @if (Route::has('register'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
@@ -97,8 +96,34 @@
         </nav>
 
         <main class="py-4">
-            @yield('content')
+            <div class="container">
+                @yield('content')
+            </div>
         </main>
     </div>
+    <script>
+    $(document).ready(function(){
+        $('.search').on('click',function(){
+            var value=$(this).siblings('#search').val();
+            var field=$(this).siblings('input[name=search_field]:checked').val();
+            $.ajax({
+                type : 'get',
+                url : '{{URL::to('search/find')}}',
+                data:{'search':value,'field':field},
+                success:function(data)
+                {
+                    $('tbody').html(data);
+                }
+            });
+        });
+    })
+
+    </script>
+
+    <script>
+
+     $.ajaxSetup({ headers: { 'csrftoken' : '{{ csrf_token() }}' } });
+
+    </script>
 </body>
 </html>

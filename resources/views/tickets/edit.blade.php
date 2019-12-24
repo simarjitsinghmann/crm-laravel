@@ -12,7 +12,10 @@
             {{ Form::model($ticket, array('route' => array('tickets.update', $ticket->id), 'method' => 'PUT')) }}
             <div class="form-group">
             {{ Form::label('title', 'Title') }}
-            {{ Form::text('title', null, array('class' => 'form-control')) }}<br>
+            {{ Form::text('title', null, array('class' => 'form-control','disabled')) }}<br>
+
+            {{ Form::label('email', 'Email Id') }}
+            {{ Form::text('email', null, array('class' => 'form-control' ,'disabled')) }}<br>
 
             {{ Form::label('body', 'ticket Body') }}
             {{ Form::textarea('body', null, array('class' => 'form-control')) }}<br>

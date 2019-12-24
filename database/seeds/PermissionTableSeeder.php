@@ -15,10 +15,6 @@ class PermissionTableSeeder extends Seeder
         //
          $permissions = [
             'Administer roles & permissions',
-           'user list',
-           'user create',
-           'user edit',
-           'user delete',
            'ticket list',
            'ticket create',
            'ticket edit',

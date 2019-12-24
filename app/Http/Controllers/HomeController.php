@@ -35,8 +35,11 @@ class HomeController extends Controller
         if($user->hasRole('superadmin')){
             return \Redirect::route('users.index');
         }
+        elseif($user->hasRole('tech')){
+            return \Redirect::route('tickets.index');
+        }
         else{
-            return view('home');
+            return \Redirect::route('search');
         }
     }
 }

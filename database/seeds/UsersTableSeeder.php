@@ -16,6 +16,7 @@ class UsersTableSeeder extends Seeder
             'name' => 'Super Admin',
             'email' => 'superadmin@gmail.com',
             'password' => bcrypt('Admin@123'),
+            'ticket_count' => '0',
         ]);
     }
 }
