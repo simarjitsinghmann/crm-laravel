@@ -19,7 +19,7 @@ use Session;
 class ticketController extends Controller {
 
     public function __construct() {
-        $this->middleware(['auth', 'clearance'])->except('index', 'show');
+        $this->middleware(['auth', 'clearance'])->except('index','list','show');
     }
     
 use HasRoles;   
@@ -31,7 +31,6 @@ use HasRoles;
 
 
     public function index(Request $request) {
-
         $user = Auth::user();
        
         if($user->hasRole('tech')){
@@ -45,7 +44,14 @@ use HasRoles;
         }
         return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
     }
+    public function list(Request $request,$id) {
 
+        $user = Auth::user();
+       
+            $tickets = ticket::where('customer_id',$id)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+        
+        return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -53,6 +59,10 @@ use HasRoles;
      */
     public function create() {
         return view('tickets.create');
+    }
+    public function createticket($id) {
+        $customer = customer::findOrFail($id);
+        return view('tickets.ticketonly',compact('customer'));
     }
 
     /**
@@ -70,7 +80,7 @@ use HasRoles;
             'address1'=>'required|max:100',
             'city'=>'required|max:100',
             'country'=>'required|max:100',
-            'email'=>'required|email:rfc|unique:users',
+            'email'=>'required|email:rfc|unique:customers',
             'contact'=>'required|min:10|numeric',
             'title'=>'required|max:100',
             'description' =>'required',
@@ -80,10 +90,11 @@ use HasRoles;
             ]);
 
         $ticketdetail['title']= $request->input('title');
-        $ticticketdetailket['description']= $request->input('description');
+        $ticketdetail['description']= $request->input('description');
         $ticketdetail['vendor']= $request->input('vendor');
         $ticketdetail['amount']= $request->input('amount');
         $ticketdetail['plan']= $request->input('plan');
+        $ticketdetail['status']= 0;
         $cus_detail['first_name']=$request->input('first_name');
         $cus_detail['last_name']=$request->input('last_name');
         $cus_detail['address1']=$request->input('address1');
@@ -92,10 +103,9 @@ use HasRoles;
         $cus_detail['country']=$request->input('country');
         $cus_detail['email']=$request->input('email');
         $cus_detail['contact']=$request->input('contact');
-        $ticketdetail['generatedby']=Auth::id();
-        // $customer=Customer::create($cus_detail);
-        // echo $customer['id'];
-        die;
+        $ticketdetail['generatedby']=Auth::id();        
+        $customer=customer::create($cus_detail);
+        $ticketdetail['customer_id']=$customer['id'];
         if($customer){
             $users = Role::where('name', 'tech')->first()->users()->orderby('ticket_count','asc')->get();
             $total= $users[0]->ticket_count+1;
@@ -109,13 +119,54 @@ use HasRoles;
                 $tech_user->save();
             }
         }
+        
 
     //Display a successful message upon save
-        return redirect()->route('tickets.index')
+        return redirect()->route('list',$customer['id'])
             ->with('flash_message', 'Ticket ,
              '. $ticket->title.' created');
     }
 
+    public function ticketstore(Request $request) { 
+
+        //Validating title and body field
+            $this->validate($request, [
+                'title'=>'required|max:100',
+                'description' =>'required',
+                'vendor'=>'required|max:100',
+                'amount'=>'required|max:100',
+                'plan'=>'required|max:100',
+                ]);
+    
+            $ticketdetail['title']= $request->input('title');
+            $ticketdetail['description']= $request->input('description');
+            $ticketdetail['vendor']= $request->input('vendor');
+            $ticketdetail['amount']= $request->input('amount');
+            $ticketdetail['plan']= $request->input('plan');
+            $ticketdetail['status']= 0;
+            $ticketdetail['customer_id']=$request->input('id');
+            $ticketdetail['generatedby']=Auth::id();  
+            $users = Role::where('name', 'tech')->first()->users()->orderby('ticket_count','asc')->get();
+            $total= $users[0]->ticket_count+1;
+            $ticketdetail['assignedto']=$users[0]->id;
+            echo "<pre>";
+            print_r($ticketdetail);
+            echo "</pre>";
+            if($users){
+                $ticket = ticket::create($ticketdetail);
+            }
+            if($ticket){
+                $tech_user=User::where('id',$users[0]->id)->first();
+                $tech_user->ticket_count=$total;
+                $tech_user->save();
+            }
+            
+    
+        //Display a successful message upon save
+            return redirect()->route('list',$ticketdetail['customer_id'])
+                ->with('flash_message', 'Ticket ,
+                 '. $ticket->title.' created');
+        }
     /**
      * Display the specified resource.
      *
@@ -124,12 +175,10 @@ use HasRoles;
      */
     public function show($id) {
         $ticket = ticket::findOrFail($id); //Find ticket of id = $id
+        $cus_d=$ticket->customer_id;
         // $comments=comment::where('ticket_id',$id)->orderby('id','desc')->get();
-        $comments = DB::table('users')
-            ->join('comments', 'users.id', '=', 'comments.user_id')
-            ->select('users.name', 'comments.comment')->where('ticket_id',$id)->orderby('comments.id','desc')
-            ->get();
-        return view ('tickets.show', compact('ticket'))->with('comments', $comments);
+        $customer = customer::findOrFail($cus_d);
+        return view ('tickets.show')->with(compact('ticket','customer'));
     }
 
     /**
@@ -140,8 +189,10 @@ use HasRoles;
      */
     public function edit($id) {
         $ticket = ticket::findOrFail($id);
-
-        return view('tickets.edit', compact('ticket'));
+        $cus_d=$ticket->customer_id;
+        // $comments=comment::where('ticket_id',$id)->orderby('id','desc')->get();
+        $customer = customer::findOrFail($cus_d);
+        return view('tickets.edit')->with(compact('ticket','customer'));
     }
 
     /**
@@ -151,16 +202,20 @@ use HasRoles;
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id) {
-        $this->validate($request, [
-            'title'=>'required|max:100',
-            'body'=>'required',
-        ]);
-
+    public function updateticket(Request $request, $id) {
+        // $this->validate($request, [
+        //     'title'=>'required|max:100',
+        //     'body'=>'required',
+        // ]);
         $ticket = ticket::findOrFail($id);
-        $ticket->title = $request->input('title');
-        $ticket->body = $request->input('body');
-        $ticket->save();
+            if($request->solution){
+                $ticket->solution = $request->solution;
+            }
+            if($request->feedback){
+                $ticket->feedback = $request->feedback;
+                $ticket->rating = $request->rating;
+            }
+            $ticket->save();
 
         return redirect()->route('tickets.show', 
             $ticket->id)->with('flash_message', 

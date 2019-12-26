@@ -21,6 +21,8 @@ class CreateTicketsTable extends Migration
             $table->string('plan');
             $table->string('amount');
             $table->string('solution')->nullable();
+            $table->string('feedback')->nullable();
+            $table->string('rating')->nullable();
             $table->string('status');
             $table->string('customer_id');
             $table->string('generatedby');

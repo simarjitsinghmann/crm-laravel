@@ -21,8 +21,6 @@
                                 <th>No</th>
                                 <th>Id</th>
                                 <th>Title</th>
-                                <th>Email</th>
-                                <th>Contact Number</th>
                                 <th>Action</th>
                                 <th>Status</th>
                                 </tr>
@@ -37,12 +35,13 @@
                                     <td>{{ ++$i }}</td>
                                     <td>{{ $ticket->id }}</td>
                                     <td>{{ $ticket->title }}</td>
-                                    <td>{{ hideEmail($ticket->email) }}</td>
-                                    <td>{{ hidecontact($ticket->contact) }}</td>
                                     <td>
+                                    @can('ticket edit')
+                                    <a class="btn btn-info" href="{{ route('tickets.edit',$ticket->id) }}">Edit</a>
+                                    @endcan
                                     <a class="btn btn-info" href="{{ route('tickets.show',$ticket->id) }}">View</a>
                                     </td>
-                                    <td>{{$ticket->status }}</td>
+                                    <td>@if($ticket->status==0)Processing @elseif($ticket->status==1) Done @endif</td>
                                 </tr>
                                 @endforeach
                                 @endif

@@ -43,18 +43,29 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{route('tickets.index')}}">Tickets</a>
                         </li>
+                    <li class="nav-item">
+                            <a class="nav-link" href="{{route('search')}}">Search</a>
+                        </li>
                     @endrole
                     @role('tech')
+                    <li class="nav-item">
+                            <a class="nav-link" href="{{route('search')}}">Search</a>
+                        </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{route('tickets.index')}}">Tickets</a>
                     </li>
                     @endrole
+                    @role('sales')
                     <li class="nav-item">
                             <a class="nav-link" href="{{route('search')}}">Search</a>
                         </li>
-                    @role('sales')
                         <li class="nav-item">
                             <a class="nav-link" href="{{route('tickets.create')}}">Create New Ticket</a>
+                        </li>
+                    @endrole
+                    @role('customer')
+                    <li class="nav-item">
+                            <a class="nav-link" href="{{route('search')}}">Search</a>
                         </li>
                     @endrole
                     </ul>
