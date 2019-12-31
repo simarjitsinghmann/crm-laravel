@@ -25,8 +25,9 @@ class CreateTicketsTable extends Migration
             $table->string('rating')->nullable();
             $table->string('status');
             $table->string('customer_id');
-            $table->string('generatedby');
-            $table->string('assignedto');
+            $table->string('sales_id');
+            $table->string('tech_id');
+            $table->string('csupport_id')->nullable();
             $table->timestamps();
         });
     }

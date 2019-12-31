@@ -97,12 +97,12 @@
                             <label class="form-control-label mbr-fonts-style display-7" for="solution-form1-4t">Solution</label>
                             
                             @if($ticket->solution != '')
-                            <textarea type="text" class="form-control" name="solution" rows="5" disabled>{{$ticket->solution}}</textarea>
+                            <textarea type="text" class="form-control" name="solution-disabled" rows="5" disabled>{{$ticket->solution}}</textarea>
                              @else
-                             @hasanyrole('Tech')
+                             @hasanyrole('tech')
                             <textarea type="text" class="form-control" name="solution" rows="5"></textarea>
                             @else
-                            <textarea type="text" class="form-control" name="solution" rows="5" disabled>Tech Not Provided Any Solution</textarea>
+                            <textarea type="text" class="form-control" name="solution-disabled" rows="5" disabled>Tech Not Provided Any Solution</textarea>
                             @endhasanyrole
                             
                             @endif
@@ -125,12 +125,20 @@
                         </div>
                         <div class="form-group" data-for="rating">
                             <label class="form-control-label mbr-fonts-style display-7" for="rating-form1-4t">Rating</label>
-                            <textarea type="text" class="form-control" name="rating" rows="5"></textarea>
+                            <input type="radio" class="form-control-label" name="rating" value="1">1
+                            <input type="radio" class="form-control-label" name="rating" value="2">2
+                            <input type="radio" class="form-control-label" name="rating" value="3">3
+                            <input type="radio" class="form-control-label" name="rating" value="4">4
+                            <input type="radio" class="form-control-label" name="rating" value="5">5
+                            <input type="radio" class="form-control-label" name="rating" value="6">6
+                            <input type="radio" class="form-control-label" name="rating" value="7">7
+                            <input type="radio" class="form-control-label" name="rating" value="9">9
+                            <input type="radio" class="form-control-label" name="rating" value="10">10
                         </div>
                         @endif
                         @endrole
                         @can('ticket edit')
-                        @if($ticket->solution != '')
+                        @if($ticket->solution == '' || $ticket->feedback == '')
                         <span class="input-group-btn">
                             <button href="" type="submit" class="btn btn-success btn-lg btn-block">Update Ticket</button>
                         </span>

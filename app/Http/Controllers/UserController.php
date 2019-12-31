@@ -7,7 +7,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\User;
+use App\Ticket;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use DB;
 use Hash;
@@ -128,11 +130,9 @@ class UserController extends Controller
             $input = array_except($input,array('password'));    
         }
 
-
         $user = User::find($id);
         $user->update($input);
         DB::table('model_has_roles')->where('model_id',$id)->delete();
-
 
         $user->assignRole($request->input('roles'));
 
@@ -153,5 +153,28 @@ class UserController extends Controller
         User::find($id)->delete();
         return redirect()->route('users.index')
                         ->with('success','User deleted successfully');
+    }
+    public function filter()
+    {
+        return view('users.filter');
+    }
+    
+    public function userfind(Request $request)
+    {
+        if($request->ajax())
+        {
+            $output="";
+            // $tickets=DB::table('tickets')->select('id','title','description','status')->where('created_at', '=', date('Y-'.$request->search.'-d').' 00:00:00')->get();
+
+            // $users=User::whereMonth('created_at', $request->month)->get();
+            $users=Role::where('name', $request->role)->first()->users()->get();
+            if($users)
+            {
+                foreach ($users as $key => $user) {
+                $output.='<option value="'.$user->id.'">'.$user->name.'</option>';
+                }
+            return Response($output);
+            }
+        }
     }
 }

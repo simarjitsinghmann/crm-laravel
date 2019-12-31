@@ -56,7 +56,12 @@
     <div class="col-xs-12 col-sm-12 col-md-12">
         <div class="form-group">
             <strong>Role:</strong>
-            {!! Form::select('roles[]', $roles,[], array('class' => 'form-control','multiple')) !!}
+            <select name="roles" class="form-control">
+                <option value="superadmin">Super Admin</option>
+                <option value="tech">Tech</option>
+                <option value="sales">Sales</option>
+                <option value="customer">Customer Support</option>
+            </select>
         </div>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-12 text-center">

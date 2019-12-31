@@ -19,7 +19,7 @@ use Session;
 class ticketController extends Controller {
 
     public function __construct() {
-        $this->middleware(['auth', 'clearance'])->except('index','list','show');
+        $this->middleware(['auth', 'clearance'])->except('list','show');
     }
     
 use HasRoles;   
@@ -33,22 +33,27 @@ use HasRoles;
     public function index(Request $request) {
         $user = Auth::user();
        
-        if($user->hasRole('tech')){
-            $tickets = ticket::where('assignedto',Auth::id())->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+        if($user->hasRole('superadmin')){
+            $tickets = Ticket::orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+            return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
         }
-        elseif($user->hasRole('sales')){
-            $tickets = ticket::where('generatedby',Auth::id())->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+        elseif($user->hasRole('tech')){
+            $tickets = ticket::where('tech_id',Auth::id())->where('status',0)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+            return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
+        }
+        elseif($user->hasRole('customer')){
+            $tickets = ticket::where('status',1)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+            return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
         }
         else{
-            $tickets = ticket::orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+            return redirect()->route('home');
         }
-        return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
     }
     public function list(Request $request,$id) {
 
         $user = Auth::user();
        
-            $tickets = ticket::where('customer_id',$id)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+        $tickets = ticket::where('customer_id',$id)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
         
         return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
     }
@@ -103,13 +108,13 @@ use HasRoles;
         $cus_detail['country']=$request->input('country');
         $cus_detail['email']=$request->input('email');
         $cus_detail['contact']=$request->input('contact');
-        $ticketdetail['generatedby']=Auth::id();        
+        $ticketdetail['sales_id']=Auth::id();        
         $customer=customer::create($cus_detail);
         $ticketdetail['customer_id']=$customer['id'];
         if($customer){
             $users = Role::where('name', 'tech')->first()->users()->orderby('ticket_count','asc')->get();
             $total= $users[0]->ticket_count+1;
-            $ticketdetail['assignedto']=$users[0]->id;
+            $ticketdetail['tech_id']=$users[0]->id;
             if($users){
                 $ticket = ticket::create($ticketdetail);
             }
@@ -145,18 +150,15 @@ use HasRoles;
             $ticketdetail['plan']= $request->input('plan');
             $ticketdetail['status']= 0;
             $ticketdetail['customer_id']=$request->input('id');
-            $ticketdetail['generatedby']=Auth::id();  
-            $users = Role::where('name', 'tech')->first()->users()->orderby('ticket_count','asc')->get();
-            $total= $users[0]->ticket_count+1;
-            $ticketdetail['assignedto']=$users[0]->id;
-            echo "<pre>";
-            print_r($ticketdetail);
-            echo "</pre>";
+            $ticketdetail['sales_id']=Auth::id();  
+            $users = Role::where('name', 'tech')->first()->users()->orderby('ticket_count','asc')->first();
+            $total= $users->ticket_count+1;
+            $ticketdetail['tech_id']=$users->id;
             if($users){
                 $ticket = ticket::create($ticketdetail);
             }
             if($ticket){
-                $tech_user=User::where('id',$users[0]->id)->first();
+                $tech_user=User::where('id',$users->id)->first();
                 $tech_user->ticket_count=$total;
                 $tech_user->save();
             }
@@ -176,9 +178,15 @@ use HasRoles;
     public function show($id) {
         $ticket = ticket::findOrFail($id); //Find ticket of id = $id
         $cus_d=$ticket->customer_id;
+        $sales_id=$ticket->sales_id;
+        $tech_id=$ticket->tech_id;
+        $csupport_id=$ticket->csupport_id;
         // $comments=comment::where('ticket_id',$id)->orderby('id','desc')->get();
         $customer = customer::findOrFail($cus_d);
-        return view ('tickets.show')->with(compact('ticket','customer'));
+        $sales = User::where('id',$sales_id)->first();
+        $tech = User::where('id',$tech_id)->first();
+        $csupport = User::where('id',$csupport_id)->first();
+        return view ('tickets.show')->with(compact('ticket','customer','sales','tech','csupport'));
     }
 
     /**
@@ -208,14 +216,32 @@ use HasRoles;
         //     'body'=>'required',
         // ]);
         $ticket = ticket::findOrFail($id);
-            if($request->solution){
-                $ticket->solution = $request->solution;
-            }
-            if($request->feedback){
+        $user = Auth::user();
+        $users = Role::where('name', 'customer')->first()->users()->orderby('ticket_count','asc')->first();
+        $total= $users->ticket_count+1;
+        if($user->hasRole('tech')){
+               $ticket->solution = $request->solution;
+               $ticket->status=1;
+               $ticket->csupport_id=$users->id;
+               $tickets=$ticket->save();
+               if($tickets){
+                    $cus_user=User::where('id',$users->id)->first();
+                    $cus_user->ticket_count=$total;
+                    $cus_user->save();
+               }
+         }
+        elseif($user->hasRole('customer')){
                 $ticket->feedback = $request->feedback;
                 $ticket->rating = $request->rating;
+                $ticket->status=2;
+                $tickets=$ticket->save();
+                if($tickets){
+                        $cus_user=User::where('id',$users->id)->first();
+                        $cus_user->ticket_count=$total;
+                        $cus_user->save();
+                }
             }
-            $ticket->save();
+
 
         return redirect()->route('tickets.show', 
             $ticket->id)->with('flash_message', 
@@ -237,5 +263,115 @@ use HasRoles;
             ->with('flash_message',
              'Article successfully deleted');
 
+    }
+    public function latest(Request $request) {
+        $user = Auth::user();
+        if($request->ajax())
+        {
+            if($request->role=='tech'){
+                $role='tech_id';
+                $status='0';
+            }
+            elseif($request->role=='customer'){
+                $role='csupport_id';
+                $status='1';
+            }
+            $output=$request->count;
+            $tickets=Ticket::where($role,$request->search)->count();
+            if($tickets > $output){
+                $ticket=Ticket::where($role,$request->search)->where('status','1')->orderby('id','desc')->first();
+                $data['output']='<div class="modals_pop bg-primary text-white">
+                <button type="button" class="close closebtn" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+                </button>
+                <p>New Ticket Issued</p>
+                <a href="'.route('tickets.show',$ticket->id).'">View Ticket Here</a></div>';
+                $data['count']=$tickets;
+                $output=$tickets;
+                return Response($data);
+            }else{
+                return Response('no'); 
+            }
+        }
+    }
+    public function filterlist(Request $request)
+    {
+        if($request->ajax())
+        {
+            $i=0;
+            $output='';
+            $solved=0;
+            // $tickets=DB::table('tickets')->select('id','title','description','status')->where('created_at', '=', date('Y-'.$request->search.'-d').' 00:00:00')->get();
+            if($request->role=='tech'){
+                $role='tech_id';
+            }
+            elseif($request->role=='sales'){
+                $role='sales_id';
+            }
+            elseif($request->role=='customer'){
+                $role='csupport_id';
+            }
+            $tickets=Ticket::whereMonth('created_at', $request->month)->whereYear('created_at', $request->year)->where($role,$request->id)->get();
+            $data['count'] = count($tickets);
+            if($data['count']>0){
+                foreach ($tickets as $key => $ticket) {
+                    if($request->role=='tech'){
+                        if($ticket->status==1||$ticket->status==2){
+                            $solved=$solved+1;
+                        }
+                    }
+                    elseif($request->role=='customer'){
+                        if($ticket->status==2){
+                            $solved=$solved+1;
+                        }
+                    }
+                    $output.= '<tr>'.
+                    '<td>'.++$i.'</td>'.
+                    '<td>'.$ticket->created_at->format('d-m-Y').'</td>'.
+                    '<td>'.$ticket->title.'</td>'.
+                    '<td>'.$ticket->description.'</td>';
+                    if($ticket->solution!=''){
+                        $output.='<td>'.$ticket->solution.'</td>';
+                        }
+                        else{
+                            $output.='<td>Pending</td>';
+                        }
+                    
+                    if($ticket->feedback!=''){
+                        $output.='<td>'.$ticket->feedback.'</td>';
+                    }
+                    else{
+                        $output.='<td><strike>No Feedback</strike></td>';
+                    }  
+                    
+                    if($ticket->status==2){
+                    $output.='<td>Closed</td>';
+                    }
+                    else{
+                        $output.='<td>Pending</td>';
+                    }
+                    if($ticket->status==2){
+                        $output.='<td>'.$ticket->rating.'/10 </td></tr>';
+                    }
+                    else{
+                        $output.='<td><strike>No Rating</strike></td></tr>';
+                    }                
+                }
+                $data['output']=$output;
+                if($request->role=='tech'){
+                    $data['solved']='<span>Total Tickets Issued :- <strong>'.count($tickets).'</strong> </span><span> Ticket Solved  :- <strong>'.$solved.'</strong> </span>';
+                }
+                elseif($request->role=='sales'){
+                    $data['solved']='<span>Total Tickets Generated :- <strong>'.count($tickets).'</strong> </span>';
+                }
+                elseif($request->role=='customer'){
+                    $data['solved']='<span>Total Tickets Issued :- <strong>'.count($tickets).'</strong> </span><span> Ticket Solved  :- <strong>'.$solved.'</strong> </span>';
+                }
+                return Response($data);
+            }
+            else{
+                return Response('no');
+            }
+        }
     }
 }

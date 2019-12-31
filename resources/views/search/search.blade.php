@@ -3,7 +3,7 @@
     <div class="row">
         <div class="panel panel-default" style="width: 100%;">
             <div class="panel-heading">
-                <h3>Products info </h3>
+                <h3> Find Customer </h3>
             </div>
             <div class="panel-body">
                 <div class="form-group">

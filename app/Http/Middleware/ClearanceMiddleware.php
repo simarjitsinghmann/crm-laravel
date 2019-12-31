@@ -18,7 +18,16 @@ class ClearanceMiddleware {
     // {
     //         return $next($request);
     //     }
-
+        if ($request->is('tickets/index'))//If user is creating a post
+            {
+            if (!Auth::user()->hasPermissionTo('ticket list'))
+            {
+                abort('401');
+            } 
+            else {
+                return $next($request);
+            }
+        }
         if ($request->is('tickets/create'))//If user is creating a post
          {
             if (!Auth::user()->hasPermissionTo('ticket create'))

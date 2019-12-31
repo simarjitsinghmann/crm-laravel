@@ -11,6 +11,6 @@ class Ticket extends Model
 {
     //
     protected $fillable = [
-        'title','description','customer_id','generatedby','assignedto','solution','status','vendor','plan','amount'
+        'title','description','customer_id','sales_id','tech_id','csupport_id','solution','status','vendor','plan','amount'
     ];
 }
