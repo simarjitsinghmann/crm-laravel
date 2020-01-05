@@ -83,9 +83,9 @@
                     <ul class="navbar-nav ml-auto">
                         <!-- Authentication Links -->
                         @guest
-                            <!-- <li class="nav-item">
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                            </li> -->
+                            </li>
                             @if (Route::has('register'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
@@ -116,6 +116,7 @@
         </nav>
         <main class="py-4">
             <div class="container">
+                @auth
             <h2 class="text-center">
             @role('superadmin')
             Super Admin Dashboard
@@ -131,6 +132,7 @@
             @endrole
             </h2>
             <hr>
+            @endauth
                 @yield('content')
             </div>
         </main>

@@ -11,7 +11,6 @@ use App\Ticket;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
-use DB;
 use Hash;
 use Auth;
 
@@ -22,7 +21,7 @@ class UserController extends Controller
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
-     */
+     */ 
     public function __construct() {
         $this->middleware(['auth', 'isAdmin']);//isAdmin middleware lets only users with a //specific permission permission to access these resources
     }

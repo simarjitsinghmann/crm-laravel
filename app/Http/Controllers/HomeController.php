@@ -38,18 +38,22 @@ class HomeController extends Controller
         // $roles=Auth::user()->roles()->get();
         // $firstRole = $this->roles->first();
         $user = Auth::user();
-        
-        if($user->hasRole('superadmin')){
-            return \Redirect::route('users.index');
-        }
-        elseif($user->hasRole('tech')){
-            return \Redirect::route('tickets.index');
-        }
-        elseif($user->hasRole('customer')){
-            return \Redirect::route('tickets.index');
+        if(\Auth::check()){
+            if($user->hasRole('superadmin')){
+                return \Redirect::route('users.index');
+            }
+            elseif($user->hasRole('tech')){
+                return \Redirect::route('tickets.index');
+            }
+            elseif($user->hasRole('customer')){
+                return \Redirect::route('tickets.index');
+            }
+            else{
+                return \Redirect::route('search');
+            }
         }
         else{
-            return \Redirect::route('search');
+            return redirect()->route('login');
         }
     }
 }

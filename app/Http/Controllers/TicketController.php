@@ -38,7 +38,7 @@ use HasRoles;
             return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
         }
         elseif($user->hasRole('tech')){
-            $tickets = ticket::where('tech_id',Auth::id())->where('status',0)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
+            $tickets = Ticket::where('tech_id',Auth::id())->where('status',0)->orderby('id', 'desc')->paginate(10); //show only 5 items at a time in descending order
             return view('tickets.index', compact('tickets'))->with('i', ($request->input('page', 1) - 1) * 10);
         }
         elseif($user->hasRole('customer')){
